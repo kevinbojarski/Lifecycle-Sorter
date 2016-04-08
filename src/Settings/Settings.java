@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static Lifecycle.ActivityLifecycle.getActivityLifecycleMethods;
 
 public class Settings implements Configurable {
     private JPanel mPanel;
@@ -39,7 +38,7 @@ public class Settings implements Configurable {
     private List<String> activeMethodsList;
     private List<String> inactiveMethodsList;
 
-    boolean modified;
+    private boolean modified;
 
     @Nls
     @Override
@@ -82,6 +81,8 @@ public class Settings implements Configurable {
             addedCustomMethods.clear();
             removedCustomMethods.clear();
         }
+        addedCustomMethods.clear();
+        removedCustomMethods.clear();
         modified = false;
     }
 
@@ -360,7 +361,7 @@ public class Settings implements Configurable {
      */
     private int getFirstActiveLifeCycleIndex() {
         for (int i = 0; i < activeMethodsList.size(); i++) {
-            if (getActivityLifecycleMethods().contains(activeMethodsList.get(i))) {
+            if (ActivityLifecycle.getActivityLifecycleMethods().contains(activeMethodsList.get(i))) {
                 return i;
             }
         }
@@ -374,7 +375,7 @@ public class Settings implements Configurable {
      */
     private int getLastActiveLifeCycleIndex() {
         for (int i = activeMethodsList.size() - 1; i >= 0; i--) {
-            if (getActivityLifecycleMethods().contains(activeMethodsList.get(i))) {
+            if (ActivityLifecycle.getActivityLifecycleMethods().contains(activeMethodsList.get(i))) {
                 return i;
             }
         }
@@ -434,10 +435,15 @@ public class Settings implements Configurable {
             return "Invalid method name. Names may only contain alphanumeric characters";
         } else if (ActivityLifecycle.isBuiltInMethod(newMethodName)) {
             return "Method name already exists";
-        } else if (SettingsUtils.isCustomMethodExists(newMethodName)) {
-            return "Method name already exists";
         } else {
-            return null;
+            if (SettingsUtils.isCustomMethodExists(newMethodName)
+                    && !removedCustomMethods.contains(newMethodName)) {
+                return "Method name already exists";
+            } else if (addedCustomMethods.contains(newMethodName)) {
+                return "Method name already exists";
+            } else {
+                return null;
+            }
         }
     }
 
@@ -465,7 +471,7 @@ public class Settings implements Configurable {
         List<String> tempInactive = new ArrayList<String>();
 
         //place lifecycle methods in order at start of lists
-        for (String methodName : getActivityLifecycleMethods()) {
+        for (String methodName : ActivityLifecycle.getActivityLifecycleMethods()) {
             if (activeMethodsList.contains(methodName)) {
                 activeMethodsList.remove(methodName);
                 tempActive.add(methodName);
